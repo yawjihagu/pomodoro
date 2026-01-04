@@ -1,5 +1,11 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, font
+try:
+    import tkinter as tk
+    from tkinter import ttk, messagebox, font
+except Exception:  # Tkinter may be missing in headless/test environments
+    tk = None
+    ttk = None
+    messagebox = None
+    font = None
 import time
 from threading import Thread
 import random
@@ -605,19 +611,30 @@ class PixelPomodoroGame:
         else:
             messagebox.showwarning("NO QUEST", "Select a quest! 📜")
 
-    def save_tasks(self):
+    def format_quest_log(self, tasks):
+        """Return formatted quest log string given iterable of (task, status) tuples."""
+        lines = []
+        lines.append("═══════════════════════════════")
+        lines.append("    🎮 ARCADE QUEST LOG 🎮    ")
+        lines.append("═══════════════════════════════")
+        lines.append("")
+        for task, status in tasks:
+            lines.append(f"[{status}] {task}")
+        lines.append("")
+        lines.append("═══════════════════════════════")
+        lines.append("      GAME SAVED! 💾")
+        lines.append("═══════════════════════════════")
+        return "\n".join(lines)
+
+    def save_tasks(self, path: Path | None = None):
         try:
-            log_file_path = Path.home() / "quest_log.txt"
+            log_file_path = Path.home() / "quest_log.txt" if path is None else Path(path)
+            content = self.format_quest_log(
+                [(self.tree.item(child)["values"][0], self.tree.item(child)["values"][1])
+                 for child in self.tree.get_children()]
+            )
             with log_file_path.open("w", encoding="utf-8") as file:
-                file.write("═══════════════════════════════\n")
-                file.write("    🎮 ARCADE QUEST LOG 🎮    \n")
-                file.write("═══════════════════════════════\n\n")
-                for child in self.tree.get_children():
-                    task, status = self.tree.item(child)["values"]
-                    file.write(f"[{status}] {task}\n")
-                file.write("\n═══════════════════════════════\n")
-                file.write("      GAME SAVED! 💾\n")
-                file.write("═══════════════════════════════\n")
+                file.write(content + "\n")
             messagebox.showinfo("💾 SAVED!", f"Game saved!\n{str(log_file_path)}")
         except Exception as e:
             messagebox.showerror("ERROR", f"Save failed:\n{str(e)}")
