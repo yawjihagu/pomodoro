@@ -517,9 +517,19 @@ class PixelPomodoroGame:
 
     def create_small_button(self, parent, text, color, command):
         """Create smaller arcade button"""
-        btn = tk.Button(parent, text=text, font=self.small_font,
-                       bg=color, fg='#FFFFFF', bd=3, relief="raised",
-                       command=command, cursor="hand2", padx=12, pady=6)
+        btn = tk.Button(
+            parent,
+            text=text,
+            font=self.small_font,
+            bg=color,
+            fg='#FFFFFF',
+            bd=3,
+            relief="raised",
+            command=command,
+            cursor="hand2",
+            padx=12,
+            pady=6,
+        )
         return btn
 
     def create_pixel_panel(self, parent, bg_color):

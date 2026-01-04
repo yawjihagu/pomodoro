@@ -1,7 +1,8 @@
 import importlib.util
 import pathlib
 
-spec = importlib.util.spec_from_file_location("pomodoroTESD", str(pathlib.Path(__file__).resolve().parents[1] / "pomodoroTESD.py"))
+module_path = pathlib.Path(__file__).resolve().parents[1] / "pomodoroTESD.py"
+spec = importlib.util.spec_from_file_location("pomodoroTESD", str(module_path))
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 PixelPomodoroGame = module.PixelPomodoroGame
