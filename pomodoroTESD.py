@@ -660,6 +660,10 @@ class PixelPomodoroGame:
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = PixelPomodoroGame(root)
-    root.mainloop()
+    # Guard for environments without tkinter (e.g., CI/headless)
+    if tk is None:
+        print("tkinter is not available in this environment; GUI will not run.")
+    else:
+        root = tk.Tk()
+        app = PixelPomodoroGame(root)
+        root.mainloop()
