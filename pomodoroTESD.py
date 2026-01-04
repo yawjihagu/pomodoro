@@ -7,7 +7,7 @@ class PomodoroApp:
     def __init__(self, root):
         self.root = root
         self.root.title("TESDA Pomodoro Timer")
-        self.root.geometry("550x650")
+        self.root.geometry("550x700")
         self.root.configure(bg="#003366")  # TESDA blue
 
         self.header_label = tk.Label(root, text="BARMM Pomodoro Timer", font=("Arial", 20, "bold"), fg="white", bg="#003366")
@@ -28,6 +28,10 @@ class PomodoroApp:
 
         self.long_break_button = tk.Button(root, text="Start Long Break", width=20, bg="#004080", fg="white", command=self.start_long_break)
         self.long_break_button.pack(pady=5)
+
+        # Finish Session Button
+        self.finish_button = tk.Button(root, text="Finish Session & Complete Task", width=25, bg="#28a745", fg="white", command=self.finish_session, state="disabled")
+        self.finish_button.pack(pady=10)
 
         # Custom Timer Entry
         self.custom_time_label = tk.Label(root, text="Custom Timer (minutes):", fg="white", bg="#003366", font=("Helvetica", 12))
@@ -65,13 +69,25 @@ class PomodoroApp:
         self.save_tasks_button.pack(pady=5)
 
         self.running = False
+        self.current_selected_task = None
 
     def start_timer(self, minutes, label):
         if self.running:
             return
+        
+        # Store the currently selected task when timer starts
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.current_selected_task = selected_item[0]
+        else:
+            self.current_selected_task = None
+        
         self.running = True
         self.status_label.config(text=label)
         total_seconds = minutes * 60
+        
+        # Disable finish button while running
+        self.finish_button.config(state="disabled")
 
         def run():
             nonlocal total_seconds
@@ -81,10 +97,31 @@ class PomodoroApp:
                 self.timer_label.config(text=time_str)
                 time.sleep(1)
                 total_seconds -= 1
+            
             self.running = False
-            self.status_label.config(text="Done")
+            self.status_label.config(text="Done! Click 'Finish Session' to complete task")
+            
+            # Enable finish button when timer completes
+            self.finish_button.config(state="normal")
 
         Thread(target=run).start()
+
+    def finish_session(self):
+        """Mark the selected task as complete when session finishes"""
+        if self.current_selected_task:
+            try:
+                current_values = self.tree.item(self.current_selected_task)["values"]
+                self.tree.item(self.current_selected_task, values=(current_values[0], "Completed"))
+                messagebox.showinfo("Session Complete", "Great work! Task marked as completed.")
+            except:
+                messagebox.showwarning("Error", "Could not update task status.")
+        else:
+            messagebox.showwarning("No Task Selected", "Please select a task before starting the timer.")
+        
+        # Disable finish button after use
+        self.finish_button.config(state="disabled")
+        self.status_label.config(text="Ready")
+        self.current_selected_task = None
 
     def start_work(self):
         self.start_timer(25, "Work Session")
