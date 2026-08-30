@@ -10,68 +10,106 @@ class PomodoroApp:
         self.root.geometry("550x700")
         self.root.configure(bg="#003366")  # TESDA blue
 
-        self.header_label = tk.Label(root, text="BARMM Pomodoro Timer", font=("Arial", 20, "bold"), fg="white", bg="#003366")
-        self.header_label.pack(pady=10)
+        # Color scheme (TESDA blue family, with an accent palette)
+        self.BG       = "#003366"
+        self.PANEL_BG = "#004a8a"
+        self.FG       = "white"
 
-        self.timer_label = tk.Label(root, text="25:00", font=("Courier", 48, "bold"), fg="white", bg="#003366")
-        self.timer_label.pack(pady=10)
+        # ---- section helper: a framed panel with a title ----
+        def section(parent, title):
+            panel = tk.Frame(parent, bg=self.PANEL_BG, padx=16, pady=10)
+            panel.pack(fill="x", padx=16, pady=(8, 4))
+            tk.Label(panel, text=title, font=("Arial", 12, "bold"),
+                     fg="#ffd166", bg=self.PANEL_BG).pack(anchor="w")
+            return panel
 
-        self.status_label = tk.Label(root, text="Ready", font=("Helvetica", 14), fg="white", bg="#003366")
-        self.status_label.pack(pady=5)
+        # ===================== Header =====================
+        self.header_label = tk.Label(root, text="BARMM Pomodoro Timer", font=("Arial", 20, "bold"), fg="#ffd166", bg=self.BG)
+        self.header_label.pack(pady=(14, 4))
 
-        self.counter_label = tk.Label(root, text="Completed: 0 of 4 today", font=("Helvetica", 11), fg="#ffd166", bg="#003366")
-        self.counter_label.pack(pady=(0, 5))
+        # ===================== Timer panel =====================
+        timer_panel = section(root, "Focus Session")
 
-        # Timer Buttons
-        self.start_button = tk.Button(root, text="Start Work", width=20, bg="#0059b3", fg="white", command=self.start_work)
-        self.start_button.pack(pady=5)
+        self.timer_label = tk.Label(timer_panel, text="25:00", font=("Courier", 56, "bold"), fg="white", bg=self.PANEL_BG)
+        self.timer_label.pack(pady=(2, 2))
 
-        self.break_button = tk.Button(root, text="Start Break", width=20, bg="#006699", fg="white", command=self.start_break)
-        self.break_button.pack(pady=5)
+        self.status_label = tk.Label(timer_panel, text="Ready", font=("Helvetica", 14), fg="#cfe4ff", bg=self.PANEL_BG)
+        self.status_label.pack()
 
-        self.long_break_button = tk.Button(root, text="Start Long Break", width=20, bg="#004080", fg="white", command=self.start_long_break)
-        self.long_break_button.pack(pady=5)
-        self.stop_button = tk.Button(root, text="Stop Timer", width=20, bg="#dc3545", fg="white", command=self.stop_timer, state="disabled")
-        self.stop_button.pack(pady=5)
+        self.counter_label = tk.Label(timer_panel, text="Completed: 0 of 4 today", font=("Helvetica", 11), fg="#ffd166", bg=self.PANEL_BG)
+        self.counter_label.pack(pady=(2, 4))
 
-        # Finish Session Button
-        self.finish_button = tk.Button(root, text="Finish Session & Complete Task", width=25, bg="#28a745", fg="white", command=self.finish_session, state="disabled")
-        self.finish_button.pack(pady=10)
+        # ---- mode selector: Work / Short Break / Long Break ----
+        self.mode_var = tk.StringVar(value="Work")
+        modes = [("Work", "Work Session"), ("Short Break", "Short Break"), ("Long Break", "Long Break")]
+        mode_row = tk.Frame(timer_panel, bg=self.PANEL_BG)
+        mode_row.pack(pady=(2, 6))
+        for label, session in modes:
+            tk.Radiobutton(mode_row, text=label, variable=self.mode_var, value=session,
+                           command=self.start_selected_mode, fg="white", bg=self.PANEL_BG,
+                           selectcolor=self.BG, activebackground=self.PANEL_BG,
+                           activeforeground="white", font=("Helvetica", 10, "bold")).pack(side="left", padx=6)
 
-        # Custom Timer Entry
-        self.custom_time_label = tk.Label(root, text="Custom Timer (minutes):", fg="white", bg="#003366", font=("Helvetica", 12))
-        self.custom_time_label.pack(pady=(20, 0))
+        # ---- timer control buttons ----
+        self.start_button = tk.Button(timer_panel, text="Start", width=12, bg="#28a745", fg="white",
+                                      font=("Helvetica", 12, "bold"), command=self.start_selected_mode)
+        self.start_button.pack(side="left", expand=True, padx=(0, 4), pady=6)
 
-        self.custom_time_entry = tk.Entry(root, width=10, justify="center")
-        self.custom_time_entry.pack(pady=5)
+        self.stop_button = tk.Button(timer_panel, text="Stop", width=12, bg="#dc3545", fg="white",
+                                     font=("Helvetica", 12, "bold"), command=self.stop_timer, state="disabled")
+        self.stop_button.pack(side="left", expand=True, padx=(4, 0), pady=6)
 
-        self.custom_timer_button = tk.Button(root, text="Start Custom Timer", command=self.start_custom_timer, bg="#ff9933", fg="white")
-        self.custom_timer_button.pack(pady=5)
+        self.finish_button = tk.Button(root, text="Finish Session & Complete Task", bg="#17a2b8", fg="white",
+                                       command=self.finish_session, state="disabled")
+        self.finish_button.pack(pady=(4, 10), ipadx=20, ipady=4)
 
-        # Task Entry
-        self.task_entry_label = tk.Label(root, text="Task to Complete:", fg="white", bg="#003366", font=("Helvetica", 12))
-        self.task_entry_label.pack(pady=(20, 0))
+        # ===================== Custom timer =====================
+        custom_panel = section(root, "Custom Timer")
 
-        self.task_entry = tk.Entry(root, width=40)
-        self.task_entry.pack(pady=5)
+        self.custom_time_label = tk.Label(custom_panel, text="Minutes:", fg="white", bg=self.PANEL_BG, font=("Helvetica", 11))
+        self.custom_time_label.pack(side="left", pady=4)
 
-        self.add_task_button = tk.Button(root, text="Add Task", command=self.add_task, bg="#0073e6", fg="white")
-        self.add_task_button.pack(pady=5)
+        self.custom_time_entry = tk.Entry(custom_panel, width=6, justify="center")
+        self.custom_time_entry.pack(side="left", padx=8, pady=4)
+        self.custom_time_entry.insert(0, "25")
 
-        # Task Table
+        self.custom_timer_button = tk.Button(custom_panel, text="Start", bg="#ff9933", fg="white",
+                                             command=self.start_custom_timer, font=("Helvetica", 10, "bold"))
+        self.custom_timer_button.pack(side="left", padx=4, pady=4)
+
+        # ===================== Task list =====================
+        task_panel = section(root, "Tasks")
+
+        task_entry_row = tk.Frame(task_panel, bg=self.PANEL_BG)
+        task_entry_row.pack(fill="x", pady=4)
+        self.task_entry_label = tk.Label(task_entry_row, text="Task:", fg="white", bg=self.PANEL_BG)
+        self.task_entry_label.pack(side="left")
+        self.task_entry = tk.Entry(task_entry_row, width=32)
+        self.task_entry.pack(side="left", padx=8)
+
+        self.add_task_button = tk.Button(task_entry_row, text="Add Task", command=self.add_task,
+                                         bg="#0073e6", fg="white")
+        self.add_task_button.pack(side="left")
+
         self.tree = ttk.Treeview(root, columns=("Task", "Status"), show="headings", height=6)
         self.tree.heading("Task", text="Task")
         self.tree.heading("Status", text="Status")
         self.tree.column("Task", anchor="w", width=300)
         self.tree.column("Status", anchor="center", width=100)
-        self.tree.pack(pady=10)
+        self.tree.pack(pady=(4, 8), padx=16, fill="x")
 
-        # Task Buttons
-        self.complete_task_button = tk.Button(root, text="Mark Task as Complete", command=self.complete_task, bg="#28a745", fg="white")
-        self.complete_task_button.pack(pady=5)
+        task_buttons = tk.Frame(root, bg=self.BG)
+        task_buttons.pack(pady=(0, 6))
+        self.complete_task_button = tk.Button(task_buttons, text="Mark Complete", command=self.complete_task,
+                                              bg="#28a745", fg="white")
+        self.complete_task_button.pack(side="left", padx=4)
+        self.save_tasks_button = tk.Button(task_buttons, text="Save to File", command=self.save_tasks,
+                                           bg="#17a2b8", fg="white")
+        self.save_tasks_button.pack(side="left", padx=4)
 
-        self.save_tasks_button = tk.Button(root, text="Save Tasks to File", command=self.save_tasks, bg="#17a2b8", fg="white")
-        self.save_tasks_button.pack(pady=5)
+        # ---- Enter-key shortcuts ----
+        self.custom_time_entry.bind("<Return>", lambda e: self.start_custom_timer())
+        self.task_entry.bind("<Return>", lambda e: self.add_task())
 
         self.running = False
         self.completed_work_sessions = 0
@@ -148,14 +186,15 @@ class PomodoroApp:
         self.status_label.config(text="Ready")
         self.current_selected_task = None
 
-    def start_work(self):
-        self.start_timer(25, "Work Session")
-
-    def start_break(self):
-        self.start_timer(5, "Short Break")
-
-    def start_long_break(self):
-        self.start_timer(15, "Long Break")
+    def start_selected_mode(self):
+        """Start whichever mode the radio selector currently shows."""
+        mode = self.mode_var.get()
+        if mode == "Work Session":
+            self.start_timer(25, "Work Session")
+        elif mode == "Short Break":
+            self.start_timer(5, "Short Break")
+        elif mode == "Long Break":
+            self.start_timer(15, "Long Break")
 
     def add_task(self):
         task_name = self.task_entry.get().strip()
