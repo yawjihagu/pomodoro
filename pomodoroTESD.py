@@ -28,6 +28,8 @@ class PomodoroApp:
 
         self.long_break_button = tk.Button(root, text="Start Long Break", width=20, bg="#004080", fg="white", command=self.start_long_break)
         self.long_break_button.pack(pady=5)
+        self.stop_button = tk.Button(root, text="Stop Timer", width=20, bg="#dc3545", fg="white", command=self.stop_timer, state="disabled")
+        self.stop_button.pack(pady=5)
 
         # Finish Session Button
         self.finish_button = tk.Button(root, text="Finish Session & Complete Task", width=25, bg="#28a745", fg="white", command=self.finish_session, state="disabled")
@@ -85,6 +87,7 @@ class PomodoroApp:
         self.can_complete = label == "Work Session"
         self.status_label.config(text=label)
         self.finish_button.config(state="disabled")
+        self.stop_button.config(state="normal")
 
         # Record when the timer should finish, using a monotonic clock so
         # it never drifts and is immune to system clock changes.
@@ -100,13 +103,27 @@ class PomodoroApp:
             self.timer_label.config(text="00:00")
             self.running = False
             self.status_label.config(text="Done! Click 'Finish Session' to complete task")
+            self.stop_button.config(state="disabled")
             if self.can_complete:
                 self.finish_button.config(state="normal")
             return
         mins, secs = divmod(int(remaining), 60)
         self.timer_label.config(text=f"{mins:02d}:{secs:02d}")
         # Schedule the next tick on the GUI thread - no Thread needed.
-        self.root.after(1000, self._tick)
+        self._timer = self.root.after(1000, self._tick)
+    
+    def stop_timer(self):
+        if not self.running:
+            return
+        # Cancel the pending tick so it never fires again
+        if hasattr(self, "_timer"):
+            self.root.after_cancel(self._timer)
+        self.running = False
+        self.timer_label.config(text="00:00")
+        self.status_label.config(text="Stopped")
+        self.finish_button.config(state="disabled")
+        self.stop_button.config(state="disabled")
+        self.current_selected_task = None
 
     def finish_session(self):
         """Mark the selected task as complete when session finishes"""
