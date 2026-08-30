@@ -1,0 +1,8 @@
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp

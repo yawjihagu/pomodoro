@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import time
 from threading import Thread
+from pathlib import Path
 
 class PomodoroApp:
     def __init__(self, root):
@@ -147,8 +148,8 @@ class PomodoroApp:
 
     def save_tasks(self):
         try:
-            # Specify the exact path
-            log_file_path = r"C:\Users\ADMIN\Downloads\task_log.txt"
+            # Save to the user's home folder so it works on any computer
+            log_file_path = Path.home() / "task_log.txt"
 
             # Save the task log
             with open(log_file_path, "w") as file:
