@@ -69,6 +69,7 @@ class PomodoroApp:
         self.save_tasks_button.pack(pady=5)
 
         self.running = False
+        self.can_complete = False
         self.current_selected_task = None
 
     def start_timer(self, minutes, label):
@@ -81,6 +82,7 @@ class PomodoroApp:
         self.current_selected_task = selected_item[0] if selected_item else None
 
         self.running = True
+        self.can_complete = label == "Work Session"
         self.status_label.config(text=label)
         self.finish_button.config(state="disabled")
 
@@ -98,7 +100,8 @@ class PomodoroApp:
             self.timer_label.config(text="00:00")
             self.running = False
             self.status_label.config(text="Done! Click 'Finish Session' to complete task")
-            self.finish_button.config(state="normal")
+            if self.can_complete:
+                self.finish_button.config(state="normal")
             return
         mins, secs = divmod(int(remaining), 60)
         self.timer_label.config(text=f"{mins:02d}:{secs:02d}")
