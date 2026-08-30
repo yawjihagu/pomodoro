@@ -132,8 +132,8 @@ class PomodoroApp:
                 current_values = self.tree.item(self.current_selected_task)["values"]
                 self.tree.item(self.current_selected_task, values=(current_values[0], "Completed"))
                 messagebox.showinfo("Session Complete", "Great work! Task marked as completed.")
-            except:
-                messagebox.showwarning("Error", "Could not update task status.")
+            except Exception as e:
+                messagebox.showwarning("Error", f"Could not update task status: {e}")
         else:
             messagebox.showwarning("No Task Selected", "Please select a task before starting the timer.")
         
