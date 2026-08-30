@@ -19,6 +19,9 @@ class PomodoroApp:
         self.status_label = tk.Label(root, text="Ready", font=("Helvetica", 14), fg="white", bg="#003366")
         self.status_label.pack(pady=5)
 
+        self.counter_label = tk.Label(root, text="Completed: 0 of 4 today", font=("Helvetica", 11), fg="#ffd166", bg="#003366")
+        self.counter_label.pack(pady=(0, 5))
+
         # Timer Buttons
         self.start_button = tk.Button(root, text="Start Work", width=20, bg="#0059b3", fg="white", command=self.start_work)
         self.start_button.pack(pady=5)
@@ -71,6 +74,7 @@ class PomodoroApp:
         self.save_tasks_button.pack(pady=5)
 
         self.running = False
+        self.completed_work_sessions = 0
         self.can_complete = False
         self.current_selected_task = None
 
@@ -105,6 +109,8 @@ class PomodoroApp:
             self.status_label.config(text="Done! Click 'Finish Session' to complete task")
             self.stop_button.config(state="disabled")
             if self.can_complete:
+                self.completed_work_sessions += 1
+                self.counter_label.config(text=f"Completed: {self.completed_work_sessions} of 4 today")
                 self.finish_button.config(state="normal")
             return
         mins, secs = divmod(int(remaining), 60)
