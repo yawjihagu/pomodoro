@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
-from threading import Thread
 from pathlib import Path
 
 class PomodoroApp:
@@ -74,38 +73,37 @@ class PomodoroApp:
 
     def start_timer(self, minutes, label):
         if self.running:
+            messagebox.showinfo("Timer Running", "A timer is already running. Click Stop to cancel it first.") 
             return
         
         # Store the currently selected task when timer starts
         selected_item = self.tree.selection()
-        if selected_item:
-            self.current_selected_task = selected_item[0]
-        else:
-            self.current_selected_task = None
-        
+        self.current_selected_task = selected_item[0] if selected_item else None
+
         self.running = True
         self.status_label.config(text=label)
-        total_seconds = minutes * 60
-        
-        # Disable finish button while running
         self.finish_button.config(state="disabled")
 
-        def run():
-            nonlocal total_seconds
-            while total_seconds >= 0 and self.running:
-                mins, secs = divmod(total_seconds, 60)
-                time_str = f"{mins:02d}:{secs:02d}"
-                self.timer_label.config(text=time_str)
-                time.sleep(1)
-                total_seconds -= 1
-            
+        # Record when the timer should finish, using a monotonic clock so
+        # it never drifts and is immune to system clock changes.
+        self.end_time = time.monotonic() + (minutes * 60)
+        self._tick()
+
+    def _tick(self):
+        if not self.running:
+            return
+        remaining = self.end_time - time.monotonic()
+        if remaining <= 0:
+            # Timer finished - update once more, then stop
+            self.timer_label.config(text="00:00")
             self.running = False
             self.status_label.config(text="Done! Click 'Finish Session' to complete task")
-            
-            # Enable finish button when timer completes
             self.finish_button.config(state="normal")
-
-        Thread(target=run).start()
+            return
+        mins, secs = divmod(int(remaining), 60)
+        self.timer_label.config(text=f"{mins:02d}:{secs:02d}")
+        # Schedule the next tick on the GUI thread - no Thread needed.
+        self.root.after(1000, self._tick)
 
     def finish_session(self):
         """Mark the selected task as complete when session finishes"""
